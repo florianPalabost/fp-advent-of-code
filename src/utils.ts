@@ -17,3 +17,13 @@ export function getInputData(filename: string) {
 
   return data.split("\n");
 }
+
+/**
+ * Prints the answer to the console.
+ *
+ * @param {number} answer - The number to print.
+ * @return {void} This function does not return a value.
+ */
+export function printAnswer(answer: number) {
+  console.log("--> Answer: ", answer);
+}

@@ -28,6 +28,7 @@ const QUESTION_SET: CubeSet = {
 
 let result = 0;
 const possibleGames: number[] = [];
+const power: number[] = [];
 
 dataSplitted.forEach((game: string) => {
   const [gameIdRaw, cubesRaw] = game.split(":");
@@ -36,11 +37,17 @@ dataSplitted.forEach((game: string) => {
   const cubesSet = cubesRaw.split(";");
   let match = true;
 
+  const miniCubeSet: CubeSet = {
+    red: 0,
+    green: 0,
+    blue: 0,
+  };
+
   cubesSet.forEach((cubeList: string) => {
     // if one subset don't match the game is not possible
-    if (!match) {
-      return;
-    }
+    // if (!match) {
+    //   return;
+    // }
 
     const cubeListSplitted = cubeList.split(", ");
     let stateColorSeen: StateColorSeen = {
@@ -50,20 +57,26 @@ dataSplitted.forEach((game: string) => {
     };
 
     cubeListSplitted.forEach((cube: string) => {
-      if (!match) {
-        return;
-      }
+      // if (!match) {
+      //   return;
+      // }
       console.log("cube:", cube);
       const [cubeNumber, cubeColor] = cube.trim().split(" ");
       console.log("cubeNumber:", cubeNumber, "cubeColor:", cubeColor);
       // all colors already seen
-      if (stateColorSeen.red && stateColorSeen.green && stateColorSeen.blue) {
-        return;
-      }
+      // if (stateColorSeen.red && stateColorSeen.green && stateColorSeen.blue) {
+      //   return;
+      // }
 
       // already seen current color
-      if (cubeColor in stateColorSeen && stateColorSeen[cubeColor]) {
-        return;
+      // if (cubeColor in stateColorSeen && stateColorSeen[cubeColor]) {
+      //   return;
+      // }
+      if (
+        cubeColor in miniCubeSet &&
+        parseInt(cubeNumber) > miniCubeSet[cubeColor]
+      ) {
+        miniCubeSet[cubeColor] = parseInt(cubeNumber);
       }
 
       if (
@@ -80,12 +93,15 @@ dataSplitted.forEach((game: string) => {
     });
   });
 
+  console.log("miniCubeSet:", miniCubeSet);
+
+  power.push(miniCubeSet.red * miniCubeSet.green * miniCubeSet.blue);
+
   if (match) {
     possibleGames.push(gameId);
     result += gameId;
   }
 });
 
-printAnswer(result);
-console.log(possibleGames);
-printAnswer(possibleGames.reduce((a, b) => a + b, 0));
+// printAnswer(result);
+printAnswer(power.reduce((a, b) => a + b, 0));

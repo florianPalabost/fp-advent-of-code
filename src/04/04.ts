@@ -6,10 +6,17 @@ let result = 0;
 
 console.log("dataSplitted", dataSplitted);
 
-dataSplitted.forEach((line: string) => {
+const instanceCopies: Record<string, number> = {};
+
+dataSplitted.forEach((line: string, cardIndex: number) => {
   // prepare data for compute
   const [rawCardWin, rawUserCardNumbers] = line.trim().split(" | ");
-  const [cardId, cardNumberWin] = rawCardWin.trim().split(": ");
+  const [rawCardId, cardNumberWin] = rawCardWin.trim().split(": ");
+  const cardId = rawCardId.replace("Card ", "").trim();
+
+  if (!instanceCopies.hasOwnProperty(cardId)) {
+    instanceCopies[cardId] = 0;
+  }
 
   const cardNumberWinArr = cardNumberWin
     .trim()
@@ -38,15 +45,25 @@ dataSplitted.forEach((line: string) => {
 
   console.log(`matchedCards: ${matchedCards}`);
 
-  let currentWin = 0;
+  // if match > 0  update counter of the caopies cards
 
   if (matchedCards.length > 0) {
-    matchedCards.forEach((cardNumber, index) => {
-      currentWin = Math.pow(2, index);
+    // Ex c1 avec 3 match : need copy of c2,c3, c4
+
+    matchedCards.forEach((cardNumber, matchedIndex) => {
+      const currentCopyId = parseInt(cardId) + (matchedIndex + 1);
+      if (!instanceCopies.hasOwnProperty(currentCopyId)) {
+        instanceCopies[currentCopyId] = 0;
+      } else {
+        instanceCopies[currentCopyId]++;
+      }
     });
-    console.log("currentWin", currentWin);
-    result += currentWin;
+    console.log(`state of instanceCopies for ${cardId} : `, instanceCopies);
   }
 });
+
+for (let card in instanceCopies) {
+  result += instanceCopies[card];
+}
 
 printAnswer(result);

@@ -97,7 +97,8 @@ dataSplitted.forEach((line: string) => {
   board.push(line.split(""));
 });
 
-const symbolRegex = new RegExp(/[-!$%^&*()@#_+|~=`{}\[\]:";'<>?,.\/]/, "i");
+const symbolRegex = new RegExp(/[*]/, "i");
+const invalidRegex = new RegExp(/[-!$%^&*()@#_+|~=`{}\[\]:";'<>?,.\/]/, "i");
 
 board.forEach((line: string[], rowIndex: number) => {
   line.forEach((char: string, colIndex: number) => {
@@ -105,12 +106,14 @@ board.forEach((line: string[], rowIndex: number) => {
       return;
     }
 
-    // check if char is a symbol
+    // check if char is a *
     if (!symbolRegex.test(char)) {
       return;
     }
+    let countValid: number = 0;
+    let adjacentValid: number[] = [];
 
-    // console.log("--current--", char);
+    console.log("--current--", char);
 
     // TOP
     let top = 0;
@@ -118,14 +121,28 @@ board.forEach((line: string[], rowIndex: number) => {
       board.hasOwnProperty(rowIndex - 1) &&
       board[rowIndex - 1].hasOwnProperty(colIndex) &&
       (board[rowIndex - 1][colIndex] !== IGNORED_CHAR ||
-        !symbolRegex.test(board[rowIndex - 1][colIndex]))
+        !invalidRegex.test(board[rowIndex - 1][colIndex]))
     ) {
       // TL? + TM + TR?
       top = getParsedNumberInLine(board, rowIndex - 1, colIndex);
+      console.log("top:", top);
+      if (top > 0) {
+        countValid++;
+        adjacentValid.push(top);
+      }
     } else {
       const topLeft = getParsedNumberInLine(board, rowIndex - 1, colIndex - 1);
       const topRight = getParsedNumberInLine(board, rowIndex - 1, colIndex + 1);
-      top = topLeft + topRight;
+      console.log("topLeft:", topLeft, "topRight:", topRight);
+      if (topLeft > 0) {
+        countValid++;
+        adjacentValid.push(topLeft);
+      }
+
+      if (topRight > 0) {
+        countValid++;
+        adjacentValid.push(topRight);
+      }
     }
     // console.log("top:", top);
 
@@ -147,10 +164,19 @@ board.forEach((line: string[], rowIndex: number) => {
       "right"
     );
 
-    middle =
-      (middleLeft !== "" ? parseInt(middleLeft) : 0) +
-      (middleRight !== "" ? parseInt(middleRight) : 0);
-    // console.log("middle:", middle);
+    const mL = middleLeft !== "" ? parseInt(middleLeft) : 0;
+    const mR = middleRight !== "" ? parseInt(middleRight) : 0;
+    console.log("middleLeft:", mL, "middleRight:", mR);
+
+    if (mL > 0) {
+      countValid++;
+      adjacentValid.push(mL);
+    }
+
+    if (mR > 0) {
+      countValid++;
+      adjacentValid.push(mR);
+    }
 
     // BOTTOM
     let bottom = 0;
@@ -158,9 +184,14 @@ board.forEach((line: string[], rowIndex: number) => {
       board.hasOwnProperty(rowIndex + 1) &&
       board[rowIndex + 1].hasOwnProperty(colIndex) &&
       (board[rowIndex + 1][colIndex] !== IGNORED_CHAR ||
-        !symbolRegex.test(board[rowIndex + 1][colIndex]))
+        !invalidRegex.test(board[rowIndex + 1][colIndex]))
     ) {
       bottom = getParsedNumberInLine(board, rowIndex + 1, colIndex); // BL? + BM + BR?
+      console.log("bottom:", bottom);
+      if (bottom > 0) {
+        countValid++;
+        adjacentValid.push(bottom);
+      }
     } else {
       if (board.hasOwnProperty(rowIndex + 1) == false) {
         bottom = 0;
@@ -175,16 +206,30 @@ board.forEach((line: string[], rowIndex: number) => {
           rowIndex + 1,
           colIndex + 1
         );
-        bottom = bottomLeft + bottomRight;
+        // bottom = bottomLeft + bottomRight;
+        console.log("bottomLeft:", bottomLeft, "bottomRight:", bottomRight);
+        if (bottomLeft > 0) {
+          countValid++;
+          adjacentValid.push(bottomLeft);
+        }
+
+        if (bottomRight > 0) {
+          countValid++;
+          adjacentValid.push(bottomRight);
+        }
       }
     }
 
     // console.log("bottom:", bottom);
 
-    const currentSumAdj = top + middle + bottom;
-    // console.log("currentSumAdj:", currentSumAdj);
-
-    result += currentSumAdj;
+    console.log("countValid:", countValid);
+    console.log("adjacentValid:", adjacentValid);
+    // 2 : gear is valid (2 is the number of adjacent)
+    if (countValid === 2) {
+      const multiply = adjacentValid.reduce((a, b) => a * b);
+      console.log(`current : "${char}" is VALID and multiply=${multiply} `);
+      result += multiply;
+    }
   });
 });
 

@@ -13,8 +13,8 @@ const getAroundNumber = (
   resultat: string,
   order = "left"
 ): string => {
-  console.log(`get Around:  ${line}, startIndex: ${startIndex} => ${resultat}`);
-  if (startIndex < 0) {
+  // console.log(`get Around:  ${line}, startIndex: ${startIndex} => ${resultat}`);
+  if (startIndex < 0 || startIndex >= line.length) {
     return resultat;
   }
 
@@ -31,7 +31,7 @@ const getAroundNumber = (
 
     return order === "left"
       ? getAroundNumber(line, startIndex - 1, resultat)
-      : getAroundNumber(line, startIndex + 1, resultat);
+      : getAroundNumber(line, startIndex + 1, resultat, "right");
   }
 
   return resultat;
@@ -49,11 +49,12 @@ const getParsedNumberInLine = (
     return 0;
   }
 
-  if (rowIndex || colIndex < 0) {
+  if (rowIndex < 0 || colIndex < 0) {
     return 0;
   }
 
   let currentCharParsed = parseInt(board[rowIndex][colIndex]);
+  // console.log("currentCharParsed", currentCharParsed);
 
   if (!isNaN(currentCharParsed)) {
     let resLeft = "";
@@ -68,7 +69,7 @@ const getParsedNumberInLine = (
       .split("")
       .reverse()
       .join("");
-    console.log(`left : ${testLeft}`);
+    // console.log(`get Around left : ${testLeft}`);
 
     let resRight = "";
     const right = getAroundNumber(
@@ -77,10 +78,10 @@ const getParsedNumberInLine = (
       resRight,
       "right"
     );
-    console.log(`right : ${right}`);
+    // console.log(`right : ${right}`);
 
     const finalNumber = testLeft.concat(board[rowIndex][colIndex], right);
-    console.log("mergeNumber", finalNumber);
+    // console.log("mergeNumber", finalNumber);
     currentCharParsed = parseInt(finalNumber);
   }
 
@@ -90,15 +91,13 @@ const getParsedNumberInLine = (
 const dataSplitted = getInputData("03/input.txt");
 let result = 0;
 
-// console.log(dataSplitted);
-
 let board: string[][] = [];
 
 dataSplitted.forEach((line: string) => {
   board.push(line.split(""));
 });
 
-const symbolRegex = new RegExp(/[!@#$%^&*()-=_+{};':"\\|,<>/~]/, "i");
+const symbolRegex = new RegExp(/[-!$%^&*()@#_+|~=`{}\[\]:";'<>?,.\/]/, "i");
 
 board.forEach((line: string[], rowIndex: number) => {
   line.forEach((char: string, colIndex: number) => {
@@ -111,22 +110,79 @@ board.forEach((line: string[], rowIndex: number) => {
       return;
     }
 
-    // current char is a symbol TODO: border effect
-    const currentSumAdj =
-      getParsedNumberInLine(board, rowIndex - 1, colIndex - 1) + // TL
-      getParsedNumberInLine(board, rowIndex - 1, colIndex) + // TM
-      getParsedNumberInLine(board, rowIndex - 1, colIndex + 1) + // TR
-      getParsedNumberInLine(board, rowIndex, colIndex - 1) + // ML
-      getParsedNumberInLine(board, rowIndex, colIndex + 1) + // MR
-      getParsedNumberInLine(board, rowIndex + 1, colIndex - 1) + // BL
-      getParsedNumberInLine(board, rowIndex + 1, colIndex) + // BM
-      getParsedNumberInLine(board, rowIndex + 1, colIndex + 1); // BR
+    // console.log("--current--", char);
 
-    // console.log(
-    //   `rowIndex: ${rowIndex - 1}, colIndex: ${
-    //     colIndex - 1
-    //   }, value: ${getParsedNumberInLine(board, rowIndex - 1, colIndex - 1)}`
-    // );
+    // TOP
+    let top = 0;
+    if (
+      board.hasOwnProperty(rowIndex - 1) &&
+      board[rowIndex - 1].hasOwnProperty(colIndex) &&
+      (board[rowIndex - 1][colIndex] !== IGNORED_CHAR ||
+        !symbolRegex.test(board[rowIndex - 1][colIndex]))
+    ) {
+      // TL? + TM + TR?
+      top = getParsedNumberInLine(board, rowIndex - 1, colIndex);
+    } else {
+      const topLeft = getParsedNumberInLine(board, rowIndex - 1, colIndex - 1);
+      const topRight = getParsedNumberInLine(board, rowIndex - 1, colIndex + 1);
+      top = topLeft + topRight;
+    }
+    // console.log("top:", top);
+
+    // MIDDLE
+    let middle = 0;
+    const middleLeft = getAroundNumber(
+      board[rowIndex],
+      colIndex - 1,
+      "",
+      "left"
+    )
+      .split("")
+      .reverse()
+      .join("");
+    const middleRight = getAroundNumber(
+      board[rowIndex],
+      colIndex + 1,
+      "",
+      "right"
+    );
+
+    middle =
+      (middleLeft !== "" ? parseInt(middleLeft) : 0) +
+      (middleRight !== "" ? parseInt(middleRight) : 0);
+    // console.log("middle:", middle);
+
+    // BOTTOM
+    let bottom = 0;
+    if (
+      board.hasOwnProperty(rowIndex + 1) &&
+      board[rowIndex + 1].hasOwnProperty(colIndex) &&
+      (board[rowIndex + 1][colIndex] !== IGNORED_CHAR ||
+        !symbolRegex.test(board[rowIndex + 1][colIndex]))
+    ) {
+      bottom = getParsedNumberInLine(board, rowIndex + 1, colIndex); // BL? + BM + BR?
+    } else {
+      if (board.hasOwnProperty(rowIndex + 1) == false) {
+        bottom = 0;
+      } else {
+        const bottomLeft = getParsedNumberInLine(
+          board,
+          rowIndex + 1,
+          colIndex - 1
+        );
+        const bottomRight = getParsedNumberInLine(
+          board,
+          rowIndex + 1,
+          colIndex + 1
+        );
+        bottom = bottomLeft + bottomRight;
+      }
+    }
+
+    // console.log("bottom:", bottom);
+
+    const currentSumAdj = top + middle + bottom;
+    // console.log("currentSumAdj:", currentSumAdj);
 
     result += currentSumAdj;
   });

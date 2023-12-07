@@ -1,3 +1,8 @@
+/**
+ * Advent of Code - Day 4
+ * https://adventofcode.com/2023/day/4
+ */
+
 import { getInputData, printAnswer } from '../utils';
 
 interface CardNode {

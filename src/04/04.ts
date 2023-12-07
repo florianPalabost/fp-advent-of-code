@@ -1,69 +1,124 @@
-import { getInputData, printAnswer } from "../utils";
+import { getInputData, printAnswer } from '../utils';
 
-const dataSplitted = getInputData("04/input.txt");
+interface CardNode {
+    id: string | number;
+    label: string | number;
+    children: CardNode[];
+    parent?: CardNode | null;
+}
+
+const displayNodeTree = (node: CardNode, indent = 0) => {
+    const indentation = ' '.repeat(indent * 2);
+
+    console.log(`${indentation}|${node.label}|`);
+
+    if (node.children.length > 0) {
+        for (const child of node.children) {
+            displayNodeTree(child, indent + 1);
+        }
+    }
+};
+
+const getNodeLength = (cardNode: CardNode): number => {
+    let count = 1;
+
+    if (cardNode.children.length > 0) {
+        for (const child of cardNode.children) {
+            count += getNodeLength(child);
+        }
+    }
+
+    return count;
+};
+const getMatchedCards = (cardId: string, cardNumberWin: string, rawUserCardNumbers: string): number[] => {
+    const cardNumberWinArr = cardNumberWin
+        .trim()
+        .split(' ')
+        .filter((n) => n.trim().length > 0)
+        .map((n) => parseInt(n.trim()));
+
+    const userCardNumbersArr = rawUserCardNumbers
+        .trim()
+        .split(' ')
+        .filter((n) => n.trim().length > 0)
+        .map((n) => parseInt(n.trim()));
+
+    // console.log(`id: ${cardId}, winCards: ${cardNumberWinArr}, userCards: ${userCardNumbersArr}`);
+
+    // get matched cards
+    const matchedCards = cardNumberWinArr
+        .map((cardNumber) => {
+            if (userCardNumbersArr.includes(cardNumber)) {
+                return cardNumber;
+            }
+        })
+        .filter((n) => n !== undefined) as number[];
+
+    // console.log(`matchedCards: ${matchedCards}`);
+
+    return matchedCards;
+};
+
+const dataSplitted = getInputData('04/input.txt');
+const allCardTree: Record<string, CardNode> = {};
 
 let result = 0;
-
-console.log("dataSplitted", dataSplitted);
 
 const instanceCopies: Record<string, number> = {};
 
 dataSplitted.forEach((line: string, cardIndex: number) => {
-  // prepare data for compute
-  const [rawCardWin, rawUserCardNumbers] = line.trim().split(" | ");
-  const [rawCardId, cardNumberWin] = rawCardWin.trim().split(": ");
-  const cardId = rawCardId.replace("Card ", "").trim();
+    // prepare data for compute
+    const [rawCardWin, rawUserCardNumbers] = line.trim().split(' | ');
+    const [rawCardId, cardNumberWin] = rawCardWin.trim().split(': ');
+    const cardId = rawCardId.replace('Card ', '').trim();
 
-  if (!instanceCopies.hasOwnProperty(cardId)) {
-    instanceCopies[cardId] = 0;
-  }
+    if (!instanceCopies.hasOwnProperty(cardId)) {
+        instanceCopies[cardId] = 0;
+    }
 
-  const cardNumberWinArr = cardNumberWin
-    .trim()
-    .split(" ")
-    .filter((n) => n.trim().length > 0)
-    .map((n) => parseInt(n.trim()));
+    let currentCardNode: CardNode = {
+        id: cardId,
+        label: 'c' + cardId,
+        children: [],
+        parent: null
+    };
 
-  const userCardNumbersArr = rawUserCardNumbers
-    .trim()
-    .split(" ")
-    .filter((n) => n.trim().length > 0)
-    .map((n) => parseInt(n.trim()));
+    const matchedCards = getMatchedCards(cardId, cardNumberWin, rawUserCardNumbers);
 
-  console.log(
-    `id: ${cardId}, winCards: ${cardNumberWinArr}, userCards: ${userCardNumbersArr}`
-  );
+    matchedCards.forEach((c, childrenCardIndex) => {
+        const currentChildId = cardIndex + 1 + childrenCardIndex + 1;
 
-  // get matched cards
-  const matchedCards = cardNumberWinArr
-    .map((cardNumber) => {
-      if (userCardNumbersArr.includes(cardNumber)) {
-        return cardNumber;
-      }
-    })
-    .filter((n) => n !== undefined);
+        const newChildCardNode: CardNode = {
+            id: currentChildId,
+            label: 'c' + currentChildId,
+            children: [],
+            parent: currentCardNode
+        };
 
-  console.log(`matchedCards: ${matchedCards}`);
-
-  // if match > 0  update counter of the caopies cards
-
-  if (matchedCards.length > 0) {
-    // Ex c1 avec 3 match : need copy of c2,c3, c4
-
-    matchedCards.forEach((cardNumber, matchedIndex) => {
-      const currentCopyId = parseInt(cardId) + (matchedIndex + 1);
-      if (!instanceCopies.hasOwnProperty(currentCopyId)) {
-        instanceCopies[currentCopyId] = 0;
-      } else {
-        instanceCopies[currentCopyId]++;
-      }
+        currentCardNode.children.push(newChildCardNode);
     });
-    console.log(`state of instanceCopies for ${cardId} : `, instanceCopies);
-  }
+
+    // add children to all others instance of the current card => need to reloop on copy card tree
+    if (currentCardNode.children.length > 0) {
+        for (let copyCardId in allCardTree) {
+            const copyCardNode = allCardTree[copyCardId];
+
+            copyCardNode.children.forEach((copyChild: CardNode) => {
+                if (copyChild.id === parseInt(cardId)) {
+                    copyChild.children = currentCardNode.children;
+                }
+            });
+        }
+    }
+
+    allCardTree[cardId] = currentCardNode;
 });
 
-for (let card in instanceCopies) {
-  result += instanceCopies[card];
+for (let finalCardId in allCardTree) {
+    const finalCardNode = allCardTree[finalCardId];
+
+    displayNodeTree(finalCardNode);
+    result += getNodeLength(finalCardNode);
 }
 
 printAnswer(result);

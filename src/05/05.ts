@@ -8,62 +8,127 @@ import { getInputData, printAnswer } from '../utils';
 interface MappingSeed {
     startSource: number;
     startTarget: number;
-    length: number;
+    rangeLength: number;
 }
 
-let result = 0;
-const dataSplitted = getInputData('05/input.txt');
-console.log('dataSplitted', dataSplitted);
+interface ConvertedSeed {
+    seed: number;
+    location: number;
+}
 
-let seedToPlanted: number[] = [];
-const mapRegex = new RegExp(/map:/);
+const getSeedsAndMappingConverters = function (dataSplitted: string[]): [number[], Record<string, MappingSeed[]>] {
+    let seedToPlanted: number[] = [];
+    const mapRegex = new RegExp(/map:/);
 
-const mappings: MappingSeed[] = [];
+    let mappings: Record<string, MappingSeed[]> = {};
 
-let i = 0;
+    let i = 0;
 
-while (i < dataSplitted.length) {
-    const line = dataSplitted[i];
+    // parse seed & mapping converters
+    while (i < dataSplitted.length) {
+        const line = dataSplitted[i];
 
-    if (!line || line === '') {
-        i++;
-        continue;
-    }
+        if (!line || line === '') {
+            i++;
+            continue;
+        }
 
-    // get seed to plant in the first line
-    if (i === 0) {
-        seedToPlanted = line
-            .trim()
-            .split(' ')
-            .map((n) => parseInt(n))
-            .filter((n) => !isNaN(n));
-    }
-
-    // get name of the mapping if line contains map
-    if (mapRegex.test(line)) {
-        const [from, to] = line.trim().replace(' map:', '').split('-to-');
-
-        // TODO: get the range
-        console.log('from', from, 'to', to);
-
-        // get range number of current mapping
-        let nextLine = dataSplitted[i + 1];
-        let j = i;
-        while (nextLine !== '') {
-            const [targetRangeStart, sourceRangeStart, length] = nextLine
+        // get seed to plant in the first line
+        if (i === 0) {
+            seedToPlanted = line
                 .trim()
                 .split(' ')
                 .map((n) => parseInt(n))
                 .filter((n) => !isNaN(n));
-
-            j++;
-            nextLine = dataSplitted[j];
         }
+
+        // get name of the mapping if line contains map
+        if (mapRegex.test(line)) {
+            const [from, to] = line.trim().replace(' map:', '').split('-to-');
+
+            // get range number of current mapping
+            let j = i + 1;
+            let nextLine = dataSplitted[j];
+            const currentMappingKey = `${from}-to-${to}`;
+            mappings[currentMappingKey] = [];
+
+            while (nextLine && nextLine !== '') {
+                const [targetRangeStart, sourceRangeStart, rangeLength] = nextLine
+                    .trim()
+                    .split(' ')
+                    .map((n) => parseInt(n))
+                    .filter((n) => !isNaN(n));
+
+                mappings[currentMappingKey].push({
+                    startTarget: targetRangeStart,
+                    startSource: sourceRangeStart,
+                    rangeLength
+                });
+
+                ++j;
+                nextLine = dataSplitted[j];
+            }
+
+            i = i !== j ? j - 1 : i;
+        }
+
+        i++;
     }
 
-    i++;
-}
+    return [seedToPlanted, mappings];
+};
 
-console.log('seedsToPlanted', seedToPlanted);
+let result = 0;
+const dataSplitted = getInputData('05/input.txt');
+// console.log('dataSplitted', dataSplitted);
+
+const [seedsToPlanted, mappings] = getSeedsAndMappingConverters(dataSplitted);
+
+// console.log('seedsToPlanted', seedsToPlanted);
+// console.log('mappings', mappings);
+
+//  foreach seed apply each mapping top / bottom (for in) until location (push to locationArr)
+
+// should be used to push location & get the minimum
+const locationArr: ConvertedSeed[] = [];
+seedsToPlanted.forEach((seed: number) => {
+    // console.log(`--- current seed: ${seed} ---`);
+    let convertedSeedToNextStep = seed;
+
+    for (let mappingKey in mappings) {
+        const ranges = mappings[mappingKey];
+        // console.log(`apply mapping : ${mappingKey}`);
+
+        // check if current seed is in range
+        let alreadyConverted = false;
+        // loop on the different ranges to determine if seed in range
+        ranges.forEach((range: MappingSeed) => {
+            if (alreadyConverted) {
+                return;
+            }
+
+            if (
+                convertedSeedToNextStep >= range.startSource &&
+                convertedSeedToNextStep < range.startSource + range.rangeLength
+            ) {
+                convertedSeedToNextStep = range.startTarget + convertedSeedToNextStep - range.startSource;
+                alreadyConverted = true;
+                // console.log(`convertedSeedToNextStep: ${convertedSeedToNextStep}`);
+            }
+            // console.log('convertedSeedToNextStep', convertedSeedToNextStep);
+        });
+    }
+
+    locationArr.push({
+        seed: seed,
+        location: convertedSeedToNextStep
+    });
+});
+
+// console.log('locationArr', locationArr);
+
+// get mini location
+locationArr.sort((a, b) => a.location - b.location);
+result = locationArr[0].location;
 
 printAnswer(result);

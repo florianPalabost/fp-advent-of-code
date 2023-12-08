@@ -16,8 +16,15 @@ interface ConvertedSeed {
     location: number;
 }
 
-const getSeedsAndMappingConverters = function (dataSplitted: string[]): [number[], Record<string, MappingSeed[]>] {
+interface RangeSeed {
+    rangeSeedStart: number;
+    rangeSeedLength: number;
+}
+
+const getSeedsAndMappingConverters = function (dataSplitted: string[]): [RangeSeed[], Record<string, MappingSeed[]>] {
     let seedToPlanted: number[] = [];
+    const rangesSeeds: RangeSeed[] = [];
+
     const mapRegex = new RegExp(/map:/);
 
     let mappings: Record<string, MappingSeed[]> = {};
@@ -40,6 +47,18 @@ const getSeedsAndMappingConverters = function (dataSplitted: string[]): [number[
                 .split(' ')
                 .map((n) => parseInt(n))
                 .filter((n) => !isNaN(n));
+            for (let i = 0; i < seedToPlanted.length; i++) {
+                if (i % 2 === 0) {
+                    const newSeedRange: RangeSeed = {
+                        rangeSeedStart: seedToPlanted[i],
+                        rangeSeedLength: seedToPlanted[i + 1]
+                    };
+                    rangesSeeds.push(newSeedRange);
+                }
+            }
+
+            // console.log('seedToPlanted', seedToPlanted);
+            // console.log('rangesSeeds', rangesSeeds);
         }
 
         // get name of the mapping if line contains map
@@ -75,60 +94,63 @@ const getSeedsAndMappingConverters = function (dataSplitted: string[]): [number[
         i++;
     }
 
-    return [seedToPlanted, mappings];
+    return [rangesSeeds, mappings];
 };
 
 let result = 0;
 const dataSplitted = getInputData('05/input.txt');
 // console.log('dataSplitted', dataSplitted);
 
-const [seedsToPlanted, mappings] = getSeedsAndMappingConverters(dataSplitted);
+const [rangesSeeds, mappings] = getSeedsAndMappingConverters(dataSplitted);
 
 // console.log('seedsToPlanted', seedsToPlanted);
 // console.log('mappings', mappings);
 
 //  foreach seed apply each mapping top / bottom (for in) until location (push to locationArr)
-
 // should be used to push location & get the minimum
 const locationArr: ConvertedSeed[] = [];
-seedsToPlanted.forEach((seed: number) => {
-    // console.log(`--- current seed: ${seed} ---`);
-    let convertedSeedToNextStep = seed;
 
-    for (let mappingKey in mappings) {
-        const ranges = mappings[mappingKey];
-        // console.log(`apply mapping : ${mappingKey}`);
+rangesSeeds.forEach((range: RangeSeed) => {
+    for (let seed = range.rangeSeedStart; seed < range.rangeSeedStart + range.rangeSeedLength; seed++) {
+        // console.log(`--- current seed: ${seed} ---`);
+        let convertedSeedToNextStep = seed;
 
-        // check if current seed is in range
-        let alreadyConverted = false;
-        // loop on the different ranges to determine if seed in range
-        ranges.forEach((range: MappingSeed) => {
-            if (alreadyConverted) {
-                return;
-            }
+        for (let mappingKey in mappings) {
+            const ranges = mappings[mappingKey];
+            // console.log(`apply mapping : ${mappingKey}`);
 
-            if (
-                convertedSeedToNextStep >= range.startSource &&
-                convertedSeedToNextStep < range.startSource + range.rangeLength
-            ) {
-                convertedSeedToNextStep = range.startTarget + convertedSeedToNextStep - range.startSource;
-                alreadyConverted = true;
-                // console.log(`convertedSeedToNextStep: ${convertedSeedToNextStep}`);
-            }
-            // console.log('convertedSeedToNextStep', convertedSeedToNextStep);
+            // check if current seed is in range
+            let alreadyConverted = false;
+            // loop on the different ranges to determine if seed in range
+            ranges.forEach((range: MappingSeed) => {
+                if (alreadyConverted) {
+                    return;
+                }
+
+                if (
+                    convertedSeedToNextStep >= range.startSource &&
+                    convertedSeedToNextStep < range.startSource + range.rangeLength
+                ) {
+                    convertedSeedToNextStep = range.startTarget + convertedSeedToNextStep - range.startSource;
+                    alreadyConverted = true;
+                    // console.log(`convertedSeedToNextStep: ${convertedSeedToNextStep}`);
+                }
+                // console.log('convertedSeedToNextStep', convertedSeedToNextStep);
+            });
+        }
+
+        locationArr.push({
+            seed: seed,
+            location: convertedSeedToNextStep
         });
     }
-
-    locationArr.push({
-        seed: seed,
-        location: convertedSeedToNextStep
-    });
 });
 
-// console.log('locationArr', locationArr);
+console.log('locationArr', locationArr);
 
 // get mini location
-locationArr.sort((a, b) => a.location - b.location);
-result = locationArr[0].location;
+// locationArr.sort((a, b) => a.location - b.location);
+// result = locationArr[0].location;
 
-printAnswer(result);
+// printAnswer(result);16384
+// --max-old-space-size=8192 --optimize_for_size

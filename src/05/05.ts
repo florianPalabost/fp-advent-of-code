@@ -110,8 +110,8 @@ const [rangesSeeds, mappings] = getSeedsAndMappingConverters(dataSplitted);
 // should be used to push location & get the minimum
 const locationArr: ConvertedSeed[] = [];
 
-rangesSeeds.forEach((range: RangeSeed) => {
-    for (let seed = range.rangeSeedStart; seed < range.rangeSeedStart + range.rangeSeedLength; seed++) {
+for (let rangeSeed of rangesSeeds) {
+    for (let seed = rangeSeed.rangeSeedStart; seed < rangeSeed.rangeSeedStart + rangeSeed.rangeSeedLength; seed++) {
         // console.log(`--- current seed: ${seed} ---`);
         let convertedSeedToNextStep = seed;
 
@@ -122,9 +122,10 @@ rangesSeeds.forEach((range: RangeSeed) => {
             // check if current seed is in range
             let alreadyConverted = false;
             // loop on the different ranges to determine if seed in range
-            ranges.forEach((range: MappingSeed) => {
+
+            for (let range of ranges) {
                 if (alreadyConverted) {
-                    return;
+                    continue;
                 }
 
                 if (
@@ -136,7 +137,10 @@ rangesSeeds.forEach((range: RangeSeed) => {
                     // console.log(`convertedSeedToNextStep: ${convertedSeedToNextStep}`);
                 }
                 // console.log('convertedSeedToNextStep', convertedSeedToNextStep);
-            });
+            }
+            // ranges.forEach((range: MappingSeed) => {
+
+            // });
         }
 
         locationArr.push({
@@ -144,10 +148,10 @@ rangesSeeds.forEach((range: RangeSeed) => {
             location: convertedSeedToNextStep
         });
     }
-});
+}
 
-console.log('locationArr', locationArr);
-
+// console.log('locationArr', locationArr);
+console.log('done loop')
 // get mini location
 // locationArr.sort((a, b) => a.location - b.location);
 // result = locationArr[0].location;

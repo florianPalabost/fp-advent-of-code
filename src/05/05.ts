@@ -108,7 +108,8 @@ const [rangesSeeds, mappings] = getSeedsAndMappingConverters(dataSplitted);
 
 //  foreach seed apply each mapping top / bottom (for in) until location (push to locationArr)
 // should be used to push location & get the minimum
-const locationArr: ConvertedSeed[] = [];
+// const locationArr: ConvertedSeed[] = [];
+let minLoc = 999_999_999_999;
 
 for (let rangeSeed of rangesSeeds) {
     for (let seed = rangeSeed.rangeSeedStart; seed < rangeSeed.rangeSeedStart + rangeSeed.rangeSeedLength; seed++) {
@@ -143,18 +144,22 @@ for (let rangeSeed of rangesSeeds) {
             // });
         }
 
-        locationArr.push({
-            seed: seed,
-            location: convertedSeedToNextStep
-        });
+        if (convertedSeedToNextStep < minLoc) {
+            minLoc = convertedSeedToNextStep;
+        }
+
+        // locationArr.push({
+        //     seed: seed,
+        //     location: convertedSeedToNextStep
+        // });
     }
 }
 
 // console.log('locationArr', locationArr);
-console.log('done loop')
+
 // get mini location
 // locationArr.sort((a, b) => a.location - b.location);
 // result = locationArr[0].location;
 
-// printAnswer(result);16384
-// --max-old-space-size=8192 --optimize_for_size
+printAnswer(minLoc);
+// --max-old-space-size=8192 --optimize_for_size // if node with arr heap out of memory

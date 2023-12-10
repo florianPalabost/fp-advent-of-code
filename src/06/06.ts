@@ -1,3 +1,8 @@
+/**
+ * Advent of Code - Day 6
+ * https://adventofcode.com/2023/day/6
+ */
+
 import { getInputData, printAnswer } from '../utils';
 
 interface Race {

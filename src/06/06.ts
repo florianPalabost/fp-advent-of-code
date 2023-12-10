@@ -22,11 +22,8 @@ const formatInput = (dataSplitted: string[]): Race[] => {
                 .split(' ')
                 .map((n) => parseInt(n.trim()))
                 .filter((n) => !isNaN(n));
-            // console.log('times', times);
-
-            times.forEach((time: number) => {
-                races.push({ time, distance: 0 });
-            });
+            const joinTime =  parseInt(times.join(''));
+            races.push({ time: joinTime , distance: 0 });
         } else {
             // it's distance
             const distances = splitLine[1]
@@ -36,10 +33,11 @@ const formatInput = (dataSplitted: string[]): Race[] => {
                 .filter((n) => !isNaN(n));
 
             // console.log('distances', distances);
-
-            distances.forEach((distance: number, di: number) => {
-                races[di].distance = distance;
-            });
+            const joinDistance =  parseInt(distances.join(''));
+           races[0].distance = joinDistance;
+            // distances.forEach((distance: number, di: number) => {
+            //     races[0].distance = distance;
+            // });
         }
     }
 
@@ -50,13 +48,13 @@ let result = 0;
 const dataSplitted = getInputData('06/input.txt');
 
 const races = formatInput(dataSplitted);
-console.log('races', races);
+// console.log('races', races);
 const winningTimes: number[] = [];
 
 for (let raceIndex = 0; raceIndex < races.length; raceIndex++) {
     const race = races[raceIndex];
 
-    console.log('---current race index', raceIndex);
+    // console.log('---current race index', raceIndex);
 
     let speed = INIT_SPEED;
     let holdingTime = 0;
@@ -66,18 +64,18 @@ for (let raceIndex = 0; raceIndex < races.length; raceIndex++) {
     while (holdingTime < race.time) {
         let distance = (race.time - holdingTime) * speed;
 
-        if (distance >= race.distance) {
-            console.log('winning ! holdingTime: ', holdingTime);
+        if (distance > race.distance) {
+            // console.log('winning ! holdingTime: ', holdingTime);
             winningTimes[raceIndex]++;
         }
-        console.log(`holdingTime: ${holdingTime} s, speed: ${speed} mm/s => distance: ${distance} mm`);
+        // console.log(`holdingTime: ${holdingTime} s, speed: ${speed} mm/s => distance: ${distance} mm`);
         holdingTime += 1;
         speed += 1;
     }
 
-    console.log(`|||->winningTimes for race ${raceIndex}: ${winningTimes[raceIndex]}`);
+    // console.log(`|||->winningTimes for race ${raceIndex}: ${winningTimes[raceIndex]}`);
 }
-
+console.log('all winningTimes', winningTimes);
 result = winningTimes.reduce((a, b) => a * b, 1);
 
-printAnswer(11 * 8 * 4);
+printAnswer(result);

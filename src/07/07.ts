@@ -47,7 +47,7 @@ const guessHandType = (hand: (number | string)[]): { handType: HandType | null; 
 
     if (Math.max(...Object.values(countCardType)) === 5) {
         // const valIndex = Object.values(countCardType).indexOf(5);
-        const key = Object.entries(hand).find(([key, val]) => val === 5);
+        const key: string | number = Object.entries(hand).find(([key, val]) => val === 5)?.[0] ?? '';
 
         return { handType: 'five', val: key };
     } else if (Math.max(...Object.values(countCardType)) === 4) {
@@ -55,7 +55,8 @@ const guessHandType = (hand: (number | string)[]): { handType: HandType | null; 
     } else if (Math.max(...Object.values(countCardType)) === 3 && Object.values(countCardType).indexOf(2) !== -1) {
         return { handType: 'full house', val: Object.values(countCardType).indexOf(3) }; //'full house';
     } else if (Math.max(...Object.values(countCardType)) === 3) {
-        return { handType: 'three', val: Object.values(countCardType).indexOf(3) }; //'three';
+        const key: string | number = Object.entries(countCardType).find(([key, val]) => val === 3)?.[0] ?? '';
+        return { handType: 'three', val: key }; //'three';
     } else if (
         Math.max(...Object.values(countCardType)) === 2 &&
         Object.values(countCardType).filter((value) => value === 2).length === 2
@@ -82,23 +83,65 @@ const guessHandType = (hand: (number | string)[]): { handType: HandType | null; 
 };
 
 const computeRanks = (playersHands: PlayerHand[]) => {
-    playersHands.forEach((playerHand: PlayerHand) => {
-        if (playerHand.handType === 'five') {
-            playerHand.rank = playersHands.length - 1;
-        } else if (playerHand.handType === 'four') {
-            playerHand.rank = playersHands.length - 2;
-        } else if (playerHand.handType === 'full house') {
-            playerHand.rank = playersHands.length - 3;
-        } else if (playerHand.handType === 'three') {
-            playerHand.rank = playersHands.length - 4;
-        } else if (playerHand.handType === 'two pair') {
-            playerHand.rank = 2;
-        } else if (playerHand.handType === 'one pair') {
-            playerHand.rank = 1;
-        } else if (playerHand.handType === 'distinct') {
-            playerHand.rank = 1;
+    // TODO: get all hands ranks and sort them from high to low then update player hand rank
+
+    // sort players hands
+    playersHands.sort((a, b) => {
+        if (a.handType === b.handType) {
+            // TODO : handle same hand : rank by value hand
+            return 0;
+        } else {
+            if (a.handType === 'five') {
+                return -1;
+            } else if (b.handType === 'five') {
+                return 1;
+            } else if (a.handType === 'four') {
+                return -1;
+            } else if (b.handType === 'four') {
+                return 1;
+            } else if (a.handType === 'full house') {
+                return -1;
+            } else if (b.handType === 'full house') {
+                return 1;
+            } else if (a.handType === 'three') {
+                return -1;
+            } else if (b.handType === 'three') {
+                return 1;
+            } else if (a.handType === 'two pair') {
+                return -1;
+            } else if (b.handType === 'two pair') {
+                return 1;
+            } else if (a.handType === 'one pair') {
+                return -1;
+            } else if (b.handType === 'one pair') {
+                return 1;
+            } else if (a.handType === 'distinct') {
+                return -1;
+            } else if (b.handType === 'distinct') {
+                return 1;
+            } else {
+                return 0;
+            }
         }
     });
+    console.log(playersHands);
+    // playersHands.forEach((playerHand: PlayerHand) => {
+    //     if (playerHand.handType === 'five') {
+    //         playerHand.rank = playersHands.length - 1;
+    //     } else if (playerHand.handType === 'four') {
+    //         playerHand.rank = playersHands.length - 2;
+    //     } else if (playerHand.handType === 'full house') {
+    //         playerHand.rank = playersHands.length - 3;
+    //     } else if (playerHand.handType === 'three') {
+    //         playerHand.rank = playersHands.length - 4;
+    //     } else if (playerHand.handType === 'two pair') {
+    //         playerHand.rank = 2;
+    //     } else if (playerHand.handType === 'one pair') {
+    //         playerHand.rank = 1;
+    //     } else if (playerHand.handType === 'distinct') {
+    //         playerHand.rank = 1;
+    //     }
+    // });
 
     return playersHands;
 };
@@ -129,7 +172,7 @@ const dataSplitted = getInputData('07/input.txt');
 console.log('dataSplitted', dataSplitted);
 
 let playersHands = formatInput(dataSplitted);
-console.log('playersHands', playersHands);
+// console.log('playersHands', playersHands);
 
 playersHands = computeRanks(playersHands);
 

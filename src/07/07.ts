@@ -46,7 +46,6 @@ const guessHandType = (hand: (number | string)[]): { handType: HandType | null; 
     }
 
     if (Math.max(...Object.values(countCardType)) === 5) {
-        // const valIndex = Object.values(countCardType).indexOf(5);
         let key: string | number = Object.entries(hand).find(([key, val]) => val === 5)?.[0] ?? '';
 
         if (key === 'A') {

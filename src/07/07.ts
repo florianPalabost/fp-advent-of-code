@@ -47,7 +47,21 @@ const guessHandType = (hand: (number | string)[]): { handType: HandType | null; 
 
     if (Math.max(...Object.values(countCardType)) === 5) {
         // const valIndex = Object.values(countCardType).indexOf(5);
-        const key: string | number = Object.entries(hand).find(([key, val]) => val === 5)?.[0] ?? '';
+        let key: string | number = Object.entries(hand).find(([key, val]) => val === 5)?.[0] ?? '';
+
+        if (key === 'A') {
+            key = 14;
+        } else if (key === 'K') {
+            key = 13;
+        } else if (key === 'Q') {
+            key = 12;
+        } else if (key === 'J') {
+            key = 11;
+        } else if (key === 'T') {
+            key = 10;
+        } else {
+            key = parseInt(key);
+        }
 
         return { handType: 'five', val: key };
     } else if (Math.max(...Object.values(countCardType)) === 4) {
@@ -55,7 +69,21 @@ const guessHandType = (hand: (number | string)[]): { handType: HandType | null; 
     } else if (Math.max(...Object.values(countCardType)) === 3 && Object.values(countCardType).indexOf(2) !== -1) {
         return { handType: 'full house', val: Object.values(countCardType).indexOf(3) }; //'full house';
     } else if (Math.max(...Object.values(countCardType)) === 3) {
-        const key: string | number = Object.entries(countCardType).find(([key, val]) => val === 3)?.[0] ?? '';
+        let key: string | number = Object.entries(countCardType).find(([key, val]) => val === 3)?.[0] ?? '';
+
+        if (key === 'A') {
+            key = 14;
+        } else if (key === 'K') {
+            key = 13;
+        } else if (key === 'Q') {
+            key = 12;
+        } else if (key === 'J') {
+            key = 11;
+        } else if (key === 'T') {
+            key = 10;
+        } else {
+            key = parseInt(key);
+        }
         return { handType: 'three', val: key }; //'three';
     } else if (
         Math.max(...Object.values(countCardType)) === 2 &&
@@ -83,13 +111,11 @@ const guessHandType = (hand: (number | string)[]): { handType: HandType | null; 
 };
 
 const computeRanks = (playersHands: PlayerHand[]) => {
-    // TODO: get all hands ranks and sort them from high to low then update player hand rank
-
     // sort players hands
     playersHands.sort((a, b) => {
         if (a.handType === b.handType) {
             // TODO : handle same hand : rank by value hand
-            return 0;
+            return String(a.valueHandType).localeCompare(String(b.valueHandType));
         } else {
             if (a.handType === 'five') {
                 return -1;
@@ -120,11 +146,11 @@ const computeRanks = (playersHands: PlayerHand[]) => {
             } else if (b.handType === 'distinct') {
                 return 1;
             } else {
-                return 0;
+                return String(a.valueHandType).localeCompare(String(b.valueHandType));
             }
         }
     });
-    console.log(playersHands);
+
     // playersHands.forEach((playerHand: PlayerHand) => {
     //     if (playerHand.handType === 'five') {
     //         playerHand.rank = playersHands.length - 1;
@@ -142,8 +168,13 @@ const computeRanks = (playersHands: PlayerHand[]) => {
     //         playerHand.rank = 1;
     //     }
     // });
+    playersHands.reverse();
 
-    return playersHands;
+    return playersHands.map((playerHand: PlayerHand, index) => {
+        playerHand.rank = index + 1;
+
+        return playerHand;
+    });
 };
 
 const formatInput = (dataSplitted: string[]): PlayerHand[] => {
@@ -172,8 +203,12 @@ const dataSplitted = getInputData('07/input.txt');
 console.log('dataSplitted', dataSplitted);
 
 let playersHands = formatInput(dataSplitted);
-// console.log('playersHands', playersHands);
 
 playersHands = computeRanks(playersHands);
+console.log(playersHands);
 
+playersHands.forEach((playerHand: PlayerHand) => {
+    result += playerHand.bid * playerHand.rank;
+    console.log(`playerHand.bid ${playerHand.bid}, playerHand.rank ${playerHand.rank}`);
+});
 printAnswer(result);
